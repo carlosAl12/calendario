@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Semanal — Ciclo de Enfoque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12162A;
+    --panel:#1B2140;
+    --panel-2:#232A4E;
+    --line:#323A63;
+    --amber:#F2A93B;
+    --mint:#4FD1AE;
+    --coral:#FF6B5C;
+    --text:#EDEBFA;
+    --muted:#8D93B8;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(circle at 12% 8%, rgba(242,169,59,0.10), transparent 45%),
+      radial-gradient(circle at 88% 4%, rgba(79,209,174,0.10), transparent 40%),
+      var(--ink);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:80px;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  header.hero{
+    max-width:1080px;
+    margin:0 auto;
+    padding:64px 24px 32px;
+  }
+  @media (max-width:600px){
+    header.hero{padding:44px 18px 20px;}
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--amber);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px;height:7px;border-radius:50%;
+    background:var(--amber);
+    box-shadow:0 0 0 4px rgba(242,169,59,0.18);
+  }
+  h1.title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(34px,5.5vw,58px);
+    line-height:1.05;
+    margin-top:16px;
+    letter-spacing:-0.01em;
+  }
+  h1.title span{color:var(--amber);}
+  .subtitle{
+    margin-top:16px;
+    color:var(--muted);
+    font-size:16.5px;
+    max-width:560px;
+    line-height:1.6;
+  }
+  @media (max-width:600px){
+    .subtitle{font-size:14.5px;}
+  }
+
+  /* ===== Focus Dial (signature element) ===== */
+  .dial-section{
+    max-width:1080px;
+    margin:24px auto 0;
+    padding:0 24px;
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:40px;
+    align-items:center;
+  }
+  @media (max-width:760px){
+    .dial-section{grid-template-columns:1fr;gap:28px;padding:0 18px;text-align:center;}
+  }
+
+  .dial-wrap{
+    position:relative;
+    width:260px;height:260px;
+    margin:0 auto;
+  }
+  @media (max-width:420px){
+    .dial-wrap{width:220px;height:220px;}
+  }
+  svg.dial{width:100%;height:100%;transform:rotate(-90deg);}
+  .dial-seg{
+    fill:none;
+    stroke:var(--panel-2);
+    stroke-width:14;
+    cursor:pointer;
+    transition:stroke .25s ease, opacity .25s ease;
+  }
+  .dial-seg:hover{opacity:.85;}
+  .dial-seg.active{stroke:var(--amber);}
+  .dial-center{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    pointer-events:none;
+  }
+  .dial-center .wk{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--muted);
+    font-size:12px;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+  }
+  .dial-center .num{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:52px;
+    color:var(--amber);
+    line-height:1;
+    margin:4px 0;
+  }
+  @media (max-width:420px){ .dial-center .num{font-size:40px;} }
+  .dial-center .proj{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:19px;
+  }
+  @media (max-width:420px){ .dial-center .proj{font-size:16px;} }
+
+  .dial-info h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:26px;
+    margin-bottom:10px;
+  }
+  .dial-info p{
+    color:var(--muted);
+    line-height:1.65;
+    font-size:15px;
+    max-width:480px;
+  }
+  @media (max-width:760px){
+    .dial-info p{max-width:none;}
+  }
+  .tag-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:18px;
+  }
+  @media (max-width:760px){
+    .tag-row{justify-content:center;}
+  }
+  .tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    padding:6px 10px;
+    border-radius:100px;
+    border:1px solid var(--line);
+    color:var(--muted);
+  }
+  .tag.on{border-color:var(--amber);color:var(--amber);}
+
+  /* ===== Fixed rhythm ===== */
+  .section{
+    max-width:1080px;
+    margin:0 auto;
+    padding:64px 24px 0;
+  }
+  @media (max-width:600px){
+    .section{padding:44px 16px 0;}
+  }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  .section-head h3{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:24px;
+  }
+  @media (max-width:600px){
+    .section-head h3{font-size:20px;}
+  }
+  .section-head .note{
+    color:var(--muted);
+    font-size:13.5px;
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .rhythm{
+    display:grid;
+    grid-template-columns:130px 1fr;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .rhythm-row{
+    display:contents;
+  }
+  .rhythm-row .time{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--amber);
+    padding:16px 18px;
+    border-top:1px solid var(--line);
+    border-right:1px solid var(--line);
+    display:flex;
+    align-items:center;
+  }
+  .rhythm-row:first-child .time{border-top:none;}
+  .rhythm-row .act{
+    padding:16px 20px;
+    border-top:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:14.5px;
+  }
+  .rhythm-row:first-child .act{border-top:none;}
+
+  @media (max-width:480px){
+    .rhythm{grid-template-columns:1fr;border-radius:12px;}
+    .rhythm-row .time{
+      border-right:none;
+      padding:14px 16px 4px;
+      font-size:11.5px;
+    }
+    .rhythm-row .act{
+      padding:0 16px 14px;
+      font-size:13.5px;
+    }
+    .rhythm-row:first-child .time{border-top:1px solid var(--line);}
+  }
+  .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  .dot.study{background:#7C8BFF;}
+  .dot.gym{background:var(--coral);}
+  .dot.shampoo{background:var(--amber);}
+  .dot.proj{background:var(--mint);}
+  .dot.rest{background:var(--muted);}
+  .act b{font-weight:600;}
+  .act .proj-label{color:var(--mint);}
+
+  /* ===== Day tabs ===== */
+  .tabs{
+    display:flex;
+    gap:6px;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    margin-bottom:20px;
+    padding-bottom:4px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+  }
+  .tabs::-webkit-scrollbar{height:4px;}
+  .tabs::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+  .tab{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:.05em;
+    padding:8px 14px;
+    border-radius:100px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    transition:all .2s ease;
+    flex:0 0 auto;
+  }
+  .tab.active{background:var(--amber);border-color:var(--amber);color:#1B1400;font-weight:600;}
+  .tab:hover:not(.active){border-color:var(--muted);color:var(--text);}
+
+  .day-panel{display:none;}
+  .day-panel.active{display:block;}
+
+  /* ===== Rotation strip ===== */
+  .rotation-strip{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:12px;
+  }
+  @media (max-width:900px){ .rotation-strip{grid-template-columns:repeat(3,1fr);} }
+  @media (max-width:560px){ .rotation-strip{grid-template-columns:repeat(2,1fr);gap:10px;} }
+
+  .rcard{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 14px;
+    cursor:pointer;
+    transition:border-color .2s ease, transform .2s ease;
+    min-width:0;
+  }
+  @media (max-width:560px){
+    .rcard{padding:13px 12px;}
+    .rcard .rt{font-size:14px;}
+    .rcard .rd{font-size:11.5px;}
+  }
+  .rcard:hover{transform:translateY(-2px);border-color:var(--muted);}
+  .rcard.active{border-color:var(--amber);background:var(--panel-2);}
+  .rcard .rn{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+  }
+  .rcard.active .rn{color:var(--amber);}
+  .rcard .rt{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:15.5px;
+    margin:6px 0 6px;
+  }
+  .rcard .rd{
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+
+  /* ===== Rules footer ===== */
+  .rules{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px 26px;
+    margin-top:20px;
+  }
+  @media (max-width:600px){
+    .rules{padding:20px 18px;}
+  }
+  .rules ol{padding-left:20px;}
+  .rules li{
+    font-size:14.5px;
+    line-height:1.7;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .rules li b{color:var(--text);}
+
+  footer{
+    max-width:1080px;
+    margin:70px auto 0;
+    padding:24px;
+    border-top:1px solid var(--line);
+    color:var(--muted);
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow mono">CICLO DE ENFOQUE · 6 SEMANAS</div>
+  <h1 class="title">Un proyecto <span>protagonista</span> por semana.</h1>
+  <p class="subtitle">Estudio, shampoo y calistenia son fijos todos los días. El código rota: cada semana un solo proyecto se lleva tu foco de la tarde-noche.</p>
+</header>
+
+<section class="dial-section">
+  <div class="dial-wrap">
+    <svg class="dial" viewBox="0 0 200 200" id="dial"></svg>
+    <div class="dial-center">
+      <div class="wk mono">Semana activa</div>
+      <div class="num" id="dial-num">1</div>
+      <div class="proj" id="dial-proj">Yulian</div>
+    </div>
+  </div>
+  <div class="dial-info">
+    <h2 id="info-title">Yulian</h2>
+    <p id="info-desc">Reorganizar la tesis, separar capas en el código y dejar lista la verificación de avance. Es lo más cerca de cerrarse — tiene fecha, así que abre el ciclo.</p>
+    <div class="tag-row" id="info-tags"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <h3>Ritmo fijo — Lunes a Viernes</h3>
+    <span class="note">No rota, pase lo que pase</span>
+  </div>
+  <div class="rhythm">
+    <div class="rhythm-row">
+      <div class="time">5:30 – 6:00</div>
+      <div class="act"><span class="dot rest"></span>Levantarse y alistarse</div>
+    </div>
+    <div class="rhythm-row">
+      <div class="time">6:00 – 14:00</div>
+      <div class="act"><span class="dot study"></span>Universidad — Ingeniería de Software</div>
+    </div>
+    <div class="rhythm-row">
+      <div class="time">14:00 – 15:00</div>
+      <div class="act"><span class="dot rest"></span>Almuerzo / descanso</div>
+    </div>
+    <div class="rhythm-row">
+      <div class="time">15:00 – 16:30</div>
+      <div class="act"><span class="dot gym"></span>Calistenia <span class="mono" style="color:var(--muted);font-size:12px;">(Lun · Mié · Vie)</span></div>
+    </div>
+    <div class="rhythm-row">
+      <div class="time">16:30 – 18:00</div>
+      <div class="act"><span class="dot shampoo"></span>Shampoo — pedidos, producción, cuentas</div>
+    </div>
+    <div class="rhythm-row">
+      <div class="time">18:00 – 18:30</div>
+      <div class="act"><span class="dot rest"></span>Cena / pausa</div>
+    </div>
+    <div class="rhythm-row">
+      <div class="time">18:30 – 21:00</div>
+      <div class="act"><span class="dot proj"></span>Proyecto de la semana → <b class="proj-label" id="rhythm-proj">Yulian</b></div>
+    </div>
+    <div class="rhythm-row">
+      <div class="time">21:00 – 21:30</div>
+      <div class="act"><span class="dot rest"></span>Cierre del día / planear el siguiente</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <h3>Semana, día por día</h3>
+    <span class="note">Toca un día</span>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="day-panels"></div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <h3>Rotación de 6 semanas</h3>
+    <span class="note">Toca una tarjeta para previsualizar</span>
+  </div>
+  <div class="rotation-strip" id="rotation"></div>
+</section>
+
+<section class="section">
+  <div class="rules">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:19px;margin-bottom:14px;">Reglas de oro</h3>
+    <ol>
+      <li><b>Shampoo y calistenia nunca rotan.</b> Uno es tu ingreso, el otro tu salud — no compiten con los proyectos de software.</li>
+      <li><b>Un solo proyecto protagonista por semana.</b> Emergencias de otros proyectos se atienden puntualmente, no le quitan el bloque al protagonista.</li>
+      <li><b>Domingo en la noche = planeación.</b> 10 minutos para saber en qué punto exacto retomas el proyecto la próxima semana que le toque turno.</li>
+      <li><b>Si un proyecto no cierra en su semana</b>, sigue donde quedó la próxima vez que rote — no hay que forzar el cierre en 7 días.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>PANEL SEMANAL · CICLO DE ENFOQUE · HECHO PARA VOLVER CADA DOMINGO</footer>
+
+<script>
+const PROJECTS = [
+  {n:1, name:"Yulian", tag:"Tesis · casi lista", desc:"Reorganizar la tesis, separar capas en el código y dejar lista la verificación de avance. Es lo más cerca de cerrarse — tiene fecha, así que abre el ciclo.", tags:["Tesis","Deadline académico","Backend"]},
+  {n:2, name:"Arigato", tag:"Cliente · avanzado", desc:"Empezar la migración a SaaS: definir qué módulos del sistema de inventario y caja se vuelven multi-cliente.", tags:["Cliente real","SaaS","Cascada"]},
+  {n:3, name:"Viberoute", tag:"Producto · funcional", desc:"Ajustar lo que falta para pasar a fase de pruebas: rutas, asignación por IA y reportes ya funcionan, toca pulir.", tags:["Ya funciona","Fase de pruebas","IA / mapas"]},
+  {n:4, name:"Jouser", tag:"Demo · en construcción", desc:"Avanzar la demo: lógica de cierre de caja y deducción de sabores más vendidos a partir del inventario.", tags:["Demo","Cierre de caja","Inventario"]},
+  {n:5, name:"Tesis Juliana", tag:"Idea · arrancando", desc:"Definir alcance: qué ejercicios de fortalecimiento, qué ángulo de cámara capturar, primer boceto técnico.", tags:["Fisioterapia","Videollamada","Recién iniciando"]},
+  {n:6, name:"Mavi", tag:"Semillero · arrancando", desc:"Definir con los profesores los criterios de calificación de los ECOES y la estructura base de la plataforma.", tags:["IA educativa","Semillero","Recién iniciando"]},
+];
+
+const DAYS = [
+  {k:"lun", label:"Lun", full:"Lunes", type:"semana", gym:true},
+  {k:"mar", label:"Mar", full:"Martes", type:"semana", gym:false},
+  {k:"mie", label:"Mié", full:"Miércoles", type:"semana", gym:true},
+  {k:"jue", label:"Jue", full:"Jueves", type:"semana", gym:false},
+  {k:"vie", label:"Vie", full:"Viernes", type:"semana", gym:true},
+  {k:"sab", label:"Sáb", full:"Sábado", type:"sabado"},
+  {k:"dom", label:"Dom", full:"Domingo", type:"domingo"},
+];
+
+let currentWeek = 1;
+let currentDay = "lun";
+
+// --- Dial ---
+function polar(cx, cy, r, angle){
+  const rad = (angle) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+function arcPath(cx, cy, r, startAngle, endAngle){
+  const s = polar(cx, cy, r, startAngle);
+  const e = polar(cx, cy, r, endAngle);
+  const large = endAngle - startAngle <= 180 ? 0 : 1;
+  return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
+}
+function buildDial(){
+  const svg = document.getElementById('dial');
+  svg.innerHTML = "";
+  const n = PROJECTS.length;
+  const gap = 6;
+  const step = 360 / n;
+  for(let i=0;i<n;i++){
+    const start = i*step + gap/2;
+    const end = (i+1)*step - gap/2;
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", arcPath(100,100,86,start,end));
+    path.setAttribute("class","dial-seg");
+    path.setAttribute("data-week", PROJECTS[i].n);
+    path.addEventListener("click", ()=> selectWeek(PROJECTS[i].n));
+    svg.appendChild(path);
+  }
+  updateDial();
+}
+function updateDial(){
+  document.querySelectorAll('.dial-seg').forEach(seg=>{
+    seg.classList.toggle('active', Number(seg.dataset.week) === currentWeek);
+  });
+  const p = PROJECTS[currentWeek-1];
+  document.getElementById('dial-num').textContent = p.n;
+  document.getElementById('dial-proj').textContent = p.name;
+  document.getElementById('info-title').textContent = p.name;
+  document.getElementById('info-desc').textContent = p.desc;
+  document.getElementById('rhythm-proj').textContent = p.name;
+  const tagsEl = document.getElementById('info-tags');
+  tagsEl.innerHTML = "";
+  p.tags.forEach((t,i)=>{
+    const s = document.createElement('span');
+    s.className = 'tag' + (i===0 ? ' on' : '');
+    s.textContent = t;
+    tagsEl.appendChild(s);
+  });
+}
+
+// --- Rotation strip ---
+function buildRotation(){
+  const wrap = document.getElementById('rotation');
+  wrap.innerHTML = "";
+  PROJECTS.forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'rcard' + (p.n===currentWeek ? ' active' : '');
+    card.dataset.week = p.n;
+    card.innerHTML = `<div class="rn mono">SEMANA ${p.n}</div><div class="rt">${p.name}</div><div class="rd">${p.tag}</div>`;
+    card.addEventListener('click', ()=> selectWeek(p.n));
+    wrap.appendChild(card);
+  });
+}
+function updateRotation(){
+  document.querySelectorAll('.rcard').forEach(c=>{
+    c.classList.toggle('active', Number(c.dataset.week)===currentWeek);
+  });
+}
+
+function selectWeek(n){
+  currentWeek = n;
+  updateDial();
+  updateRotation();
+  renderDayPanel(currentDay);
+}
+
+// --- Day tabs ---
+function buildTabs(){
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = "";
+  DAYS.forEach(d=>{
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (d.k===currentDay ? ' active' : '');
+    btn.textContent = d.label;
+    btn.dataset.day = d.k;
+    btn.addEventListener('click', ()=> selectDay(d.k));
+    tabs.appendChild(btn);
+  });
+}
+function selectDay(k){
+  currentDay = k;
+  document.querySelectorAll('.tab').forEach(t=> t.classList.toggle('active', t.dataset.day===k));
+  renderDayPanel(k);
+}
+function renderDayPanel(k){
+  const day = DAYS.find(d=>d.k===k);
+  const proj = PROJECTS[currentWeek-1].name;
+  const container = document.getElementById('day-panels');
+  let rows = [];
+  if(day.type === "semana"){
+    rows = [
+      ["5:30 – 6:00","rest","Levantarse y alistarse"],
+      ["6:00 – 14:00","study","Universidad"],
+      ["14:00 – 15:00","rest","Almuerzo / descanso"],
+      day.gym ? ["15:00 – 16:30","gym","Calistenia"] : ["15:00 – 16:30","shampoo","Shampoo (bloque extra)"],
+      ["16:30 – 18:00","shampoo","Shampoo"],
+      ["18:00 – 18:30","rest","Cena / pausa"],
+      ["18:30 – 21:00","proj",`Proyecto de la semana — <b class="proj-label">${proj}</b>`],
+      ["21:00 – 21:30","rest","Cierre del día"],
+    ];
+  } else if(day.type === "sabado"){
+    rows = [
+      ["Mañana","shampoo","Shampoo — producción y pedidos fuertes de la semana"],
+      ["Tarde (2–3h)","proj",`Bloque largo de <b class="proj-label">${proj}</b>, sin universidad de por medio`],
+      ["Noche","rest","Libre"],
+    ];
+  } else {
+    rows = [
+      ["Mañana","rest","Descanso / familia"],
+      ["Tarde","gym","Calistenia + revisión de la semana"],
+      ["Noche","proj",`Planear semana entrante — próximo turno: <b class="proj-label">${proj}</b>`],
+    ];
+  }
+  container.innerHTML = `
+    <div class="day-panel active">
+      <div class="rhythm">
+        ${rows.map(r => `
+          <div class="rhythm-row">
+            <div class="time">${r[0]}</div>
+            <div class="act"><span class="dot ${r[1]}"></span>${r[2]}</div>
+          </div>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+buildDial();
+buildRotation();
+buildTabs();
+renderDayPanel(currentDay);
+</script>
+
+</body>
+</html>
